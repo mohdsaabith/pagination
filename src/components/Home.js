@@ -1,93 +1,141 @@
-import { getByTitle } from "@testing-library/react";
-import { data } from "autoprefixer";
 import axios from "axios";
 import React from "react";
-import { useEffect, useState } from "react";
-import Pagination from "./Pagination";
+import { useEffect } from "react";
 import ReactPaginate from "react-paginate";
+import ReactLoading from "react-loading";
 
-const Home = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [post, setPost] = useState([]);
+import { Link } from "react-router-dom";
 
+const Home = ({
+  loading,
+  setLoading,
+  post,
+  setPost,
+  currentPage,
+  setCurrentPage,
+  error,
+  setError,
+  getDet,
+  setGetDet,
+}) => {
   const handlePageClick = (clickData) => {
-    console.log(clickData.selected);
-    setCurrentPage(clickData.selected);
-    getApiData();
+    setCurrentPage(clickData.selected + 1);
   };
 
   const getApiData = async () => {
-    setLoading(true);
-    const res = await axios.get(
-      `https://api.jikan.moe/v4/anime?page=${currentPage}`
-    );
-    setPost(res.data.data);
-    setLoading(false);
-    console.log(res.data);
+    try {
+      setLoading(true);
+      const res = await axios.get(
+        `https://api.jikan.moe/v4/anime?page=${currentPage}`
+      );
+      setPost(res.data.data);
+      setLoading(false);
+    } catch (error) {
+      setError(true);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     getApiData();
-  }, []);
+  }, [currentPage]);
 
-  if (loading && post.length == 0) {
-    return <h2>Loading...</h2>;
+  if (loading && post.length === 0) {
+    return (
+      <div className="flex w-screen h-screen items-center  justify-center">
+        <ReactLoading type="bars" color="white" height={80} width={100} />
+      </div>
+    );
   }
 
   return (
     <div>
-      <div className="App">
-        <div className="overflow-auto m-9">
-          <table class="table-auto w-full ">
-            <thead className="bg-gray-50 border-b-2 border-gray-200">
-              <tr>
-                <th className="p-3 text-sm tracking-wide text-left">
-                  Movie Name
-                </th>
-                <th className="p-3 text-sm tracking-wide text-left">Rank</th>
-                <th className="p-3 text-sm tracking-wide text-left">Source</th>
-                <th className="p-3 text-sm tracking-wide text-left">Theme</th>
-                <th className="p-3 text-sm tracking-wide text-left">
-                  Duration
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {post.map((content) => (
-                <tr>
-                  <td>{content.title_english}</td>
-                  <td>{content.rank}</td>
-                  <td>{content.source}</td>
-                  <td>{content.popularity}</td>
-                  <td>{content.duration}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="m-9 items-center ">
-          <ReactPaginate
-            previousLabel={"Prev"}
-            nextLabel={"Next"}
-            breakLabel={"..."}
-            pageCount={1022}
-            marginPagesDisplayed={4}
-            pageRangeDisplayed={5}
-            onPageChange={handlePageClick}
-            containerClassName={"flex"}
-            pageClassName={"border-2 w-12 h-8 text-center hover:bg-gray-500 "}
-            pageLinkClassName={"text-blue"}
-            className={
-              "text-blue-900  flex text-center items-center justify-center"
-            }
-            previousClassName={
-              "border-2 w-12 h-8 text-center hover:bg-gray-500"
-            }
-            nextClassName={"border-2 w-12 h-8 text-center hover:bg-gray-500"}
-            breakClassName={"border-2 w-12 h-8 text-center hover:bg-gray-500"}
-            activeClassName={"bg-cyan-600 font-bold hover:text-white"}
-          />
+      <div className="text-[15.19px]">
+        <div className="p-2 ">
+          {loading ? (
+            <>
+              <div className="w-screen h-screen flex justify-center items-center ">
+                <ReactLoading
+                  type="bars"
+                  color="white"
+                  height={80}
+                  width={100}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <table class="table-auto w-full  rounded-lg bg-white bg-opacity-50 ">
+                <thead className="bg-gray-50 border-b-2 border-gray-200">
+                  <tr>
+                    <th>Mal_id</th>
+                    <th className="p-3 text-sm tracking-wide text-red-800 text-left">
+                      Movie Name
+                    </th>
+                    <th className="p-3 text-sm tracking-wide text-left">
+                      Rank
+                    </th>
+                    <th className="p-3 text-sm tracking-wide text-left">
+                      Source
+                    </th>
+                    <th className="p-3 text-sm tracking-wide text-left">
+                      Theme
+                    </th>
+                    <th className="p-3 text-sm tracking-wide text-left">
+                      Duration
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {post.map((content) => (
+                    <tr>
+                      <td>{content.mal_id}</td>
+                      <td className="font-bold">
+                        <Link
+                          to={`/details/${content.mal_id}`}
+                          onClick={() => {
+                            setGetDet(content.mal_id);
+                          }}>
+                          {content.title_english}
+                        </Link>
+                      </td>
+                      <td>{content.rank}</td>
+                      <td>{content.source}</td>
+                      <td>{content.popularity}</td>
+                      <td>{content.duration}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
+          {error ? (
+            <>
+              <p className="flex justify-center items-center">Got an error</p>
+            </>
+          ) : null}
+          <div className="mx-9 items-center ">
+            <ReactPaginate
+              previousLabel={"Prev"}
+              nextLabel={"Next"}
+              breakLabel={"..."}
+              pageCount={1022}
+              marginPagesDisplayed={4}
+              pageRangeDisplayed={5}
+              onPageChange={handlePageClick}
+              containerClassName={
+                "flex bg-white rounded-xl bg-opacity-0 font-bold text-blue-900 mx-auto flex text-center items-center justify-center"
+              }
+              pageClassName={"border-2 w-12 h-8 text-center hover:bg-gray-500 "}
+              pageLinkClassName={"text-blue"}
+              previousClassName={
+                "border-2 w-12 h-8 text-center hover:bg-gray-500"
+              }
+              nextClassName={"border-2 w-12 h-8 text-center hover:bg-gray-500"}
+              breakClassName={"border-2 w-12 h-8 text-center hover:bg-gray-500"}
+              activeClassName={"bg-cyan-600 font-bold hover:text-white"}
+            />
+          </div>
         </div>
       </div>
     </div>
